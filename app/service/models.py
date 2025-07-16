@@ -1,5 +1,4 @@
-from sqlmodel import SQLModel, Field, Column, DateTime, Text, Enum as SQLEnum
-from typing import Optional, Literal
+from sqlmodel import SQLModel, Field, Column, DateTime, Enum as SQLEnum
 from datetime import datetime
 from enum import Enum
 import uuid
@@ -14,20 +13,16 @@ class FileType(str, Enum):
 
 
 class FileRecord(SQLModel, table=True):
-    __tablename__ = "file_records"
+    __tablename__ = "files"
     
-    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     filename: str = Field(index=True)
     original_filename: str
     file_type: FileType = Field(sa_column=Column(SQLEnum(FileType)))
     mime_type: str
-    file_size: int  # in bytes
+    file_size: int
     file_path: str
-    is_optimized: bool = False
-    optimized_path: Optional[str] = None
-    file_metadata: Optional[str] = Field(default=None, sa_column=Column(Text))  # JSON string
     created_at: datetime = Field(default_factory=datetime.utcnow, sa_column=Column(DateTime))
-    updated_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime))
 
 
 # Response models
@@ -38,10 +33,7 @@ class FileResponse(SQLModel):
     file_type: FileType
     mime_type: str
     file_size: int
-    is_optimized: bool
-    file_metadata: Optional[str] = None
     created_at: datetime
-    updated_at: Optional[datetime] = None
     
     
 class FileListResponse(SQLModel):
@@ -58,6 +50,5 @@ class UploadResponse(SQLModel):
     file_type: FileType
     mime_type: str
     file_size: int
-    is_optimized: bool
     url: str
     message: str

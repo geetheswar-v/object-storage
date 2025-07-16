@@ -1,61 +1,101 @@
-# FastAPI Object Storage API
+# Object Storage API
 
 A self-hosted object storage API built with FastAPI. It supports uploading, listing, deleting, and serving files. Upload, delete, and list routes are protected by an API key, while the file access endpoint is public.
 
 ## Features
 
-- Protected upload, delete, and list endpoints using an API key
-- Public file access via `/files/{filename}`
-- Optional PostgreSQL integration for file metadata
-- Local file storage with configurable upload directory
-- File type and size validation
-- Image Optimization for Web Image Serving
+- **Minimal & Protected**: Protected upload, delete, and list endpoints using an API key
+- **Web Optimization**: Automatic image/video optimization for web delivery
+- **Type Safety**: Full TypeScript-style type hints with modern Python
+- **Public File Access**: Direct file serving without authentication
+- **Organized Storage**: Automatic file categorization by type
 
-## Setup Instructions
+## Quick Start
 
-### 1. Clone & Install
+### 1. Install
 
+#### 1.1 Using UV
 ```bash
 git clone https://github.com/geetheswar-v/object-storage.git
-cd object_storage_api
-uv sync # If using uv
-pip install -r requirements.txt
-````
-
-### 2. Environment Configuration
-
-Create a `.env` file in the root directory with the following content:
-
-```env
-API_KEY=url_safe_key
-UPLOAD_DIR=uploads
-MAX_FILE_SIZE_MB=10
-DATABASE_URL=postgresql://fastapi_user:yourpassword@localhost/object_storage
+cd object-storage
+uv sync
 ```
 
-## Running the Server
+#### 1.2 Using Python venv
+```bash
+git clone https://github.com/geetheswar-v/object-storage.git
+cd object-storage
+python -m venv .venv
+source .venv/bin/active # linux
+pip install -r requiremnets.txt
+```
+
+### 2. Setup Environment
 
 ```bash
-python run.py
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
-The application will be accessible at `http://localhost:8000`.
+### 3. Run Server
+
+```bash
+uv run python run.py
+```
+
+Server runs on `http://localhost:8000`
 
 ## API Endpoints
 
-| Endpoint             | Method | Auth Required   | Description             |
-| -------------------- | ------ | --------------- | ----------------------- |
-| `/upload`            | POST   | Yes (x-api-key) | Upload a file           |
-| `/list`              | GET    | Yes (x-api-key) | List all uploaded files |
-| `/delete/{filename}` | DELETE | Yes (x-api-key) | Delete a specific file  |
-| `/files/{filename}`  | GET    | No              | Public file access      |
+| Endpoint                   | Method | Auth | Description                       |
+| -------------------------- | ------ | ---- | --------------------------------- |
+| `/upload`                  | POST   | ✓    | Upload any file (no optimization) |
+| `/upload/web`              | POST   | ✓    | Upload with web optimization      |
+| `/list`                    | GET    | ✓    | List files with pagination        |
+| `/delete/{file_id}`        | DELETE | ✓    | Delete file by ID                 |
+| `/files/{filename}`        | GET    | —    | Public file access                |
+| `/files/delete/{filename}` | DELETE | ✓    | Delete file by filename           |
 
-## Example Upload Request
+## Web Optimization
 
+The `/upload/web` endpoint optimizes:
+- **Images**: JPEG, PNG, BMP, TIFF, WebP (excludes SVG)
+- **Videos**: MP4, AVI, MOV, etc. (supported by ffmpeg)
+
+> **Note**: Video optimization requires `ffmpeg` to be installed on the server. If not available, video files will be uploaded as-is without optimization.
+
+Query parameters:
+- `quality`: JPEG quality (range: `1–100`, default: `80`)
+- `video_quality`: Video quality: `low`, `medium`, or `high` (default: `medium`) 
+- `max_width`: Maximum width of the image (range: `100–4000`, default: `1200`)
+- `max_height`: Maximum height of the image (range: `100–4000`, default: `800`)
+- `preserve_alpha`: Preserve PNG transparency layer (default: `false`
+
+## Usage Examples
+
+### Upload Any File
 ```bash
-curl -X POST http://localhost:8000/upload \
-  -H "x-api-key: key" \
-  -F "file=@mydocument.pdf"
+curl -X POST "http://localhost:8000/upload" \
+  -H "x-api-key: api-key" \
+  -F "file=@document.pdf"
+```
+
+### Upload with Web Optimization
+```bash
+curl -X POST "http://localhost:8000/upload/web?quality=90&max_width=1920&preserve_alpha=true" \
+  -H "x-api-key: api-key" \
+  -F "file=@image.png"
+```
+
+### List Files
+```bash
+curl -X GET "http://localhost:8000/list?page=1&per_page=10&file_type=image" \
+  -H "x-api-key: api-key"
+```
+
+### Access File (Public)
+```bash
+curl "http://localhost:8000/files/filename.jpg"
 ```
 
 ## Contributions
