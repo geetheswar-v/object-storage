@@ -27,7 +27,7 @@ git clone https://github.com/geetheswar-v/object-storage.git
 cd object-storage
 python -m venv .venv
 source .venv/bin/active # linux
-pip install -r requiremnets.txt
+pip install -r requirements.txt
 ```
 
 ### 2. Setup Environment
